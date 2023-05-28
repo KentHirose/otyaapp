@@ -160,7 +160,7 @@ if agree:
     # 写真の取得
     picture = st.camera_input("Take a picture")
 
-IMG_PATH = 'imgs'
+IMG_PATH = './imgs'
 os.mkdir(IMG_PATH)
 
 
