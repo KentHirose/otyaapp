@@ -161,7 +161,7 @@ if agree:
     picture = st.camera_input("Take a picture")
 
 IMG_PATH = './imgs'
-os.mkdir(IMG_PATH) # IMG_PATH = './imgs'
+# os.mkdir(IMG_PATH) # IMG_PATH = './imgs'
 
 
 st.markdown('### 📈 Taste Prediction')
