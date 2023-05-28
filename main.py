@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 from PIL import Image
 import numpy as np
@@ -130,60 +131,12 @@ def conversion_rgb_into_taste(A,x):
     taste_score = np.dot(x,A)
     return taste_score
 
-# 表現行列の作成過程
-# サンプル画像に対応する特徴色のデータを作成した
-# サンプル画像に対応する特徴色のデータを作成する
 
-# 画像を特徴色に
-def img_to_ccolor(input_img):
-    # 画像を一つのRGBに
-    rgb = img_to_rgb(input_img)
-    print("===RGB===")
-    print(rgb)
-    # RGBを特徴色に
-    x = comp_sim(rgb)
-    return x
-
-# サンプルの緑茶の画像データ
-    ## 濃い綾鷹
-    ## 颯
-    ## 濃いお〜いお茶
-    ## 伊右衛門
-    ## 生茶
-otya_img_list = ["/content/oiotyakoi.jpeg", "/content/sou.jpeg", "/content/koiayataka.jpg", "/content/iemon.jpeg", "/content/namatya.jpeg"]
-
-otya_ccolor_list = []
-
-for img in otya_img_list:
-    print(img)
-    ccolor = img_to_ccolor(img)
-    print(ccolor)
-    otya_ccolor_list.append(ccolor)
-
-print(otya_ccolor_list)
-
-# サンプルの緑茶の味データを作成し、正規化(0~1)した
-# サンプルの緑茶の味データを正規化(0~1)
-## 濃い綾鷹
-## 颯
-## 濃いお〜いお茶
-## 伊右衛門
-## 生茶
-tastes = np.array([
-    [1,4,4,3],
-    [3,5,5,2],
-    [1,4,5,2],
-    [4,3,4,1],
-    [4,1,1,3]
+A = np.array([
+    [ 0.62678836,-0.93686419,-0.84421597,0.06807708],
+    [-0.89848787,0.25603813,0.16036138,0.67586251],
+    [-0.86487733,0.60444045,0.4623413,0.4919648 ]
     ])
-c = np.linalg.norm(tastes)
-normalized_tastes = tastes / c
-
-print(normalized_tastes)
-
-# 表現行列を作成した
-# 特徴色から味を予測する表現行列を作成
-A = make_hyougen_matrix(normalized_tastes, otya_ccolor_list)
 
 
 st.title("🍵 緑茶のパッケージから味を予測")
@@ -207,33 +160,42 @@ if agree:
     # 写真の取得
     picture = st.camera_input("Take a picture")
 
-# 写真の配列化
-if picture is not None:
-    
-    # PILで開く
-    pil_pic = Image.open(picture)
-    
-    # 配列化
-    pic_array = np.array(pil_pic)
-    st.write(pic_array.shape)
-    st.write(pic_array)
+IMG_PATH = 'imgs'
+
 
 st.markdown('### 📈 Taste Prediction')
 
-# 配列を味に変換
-if pic_array is not None:
-    # [0.5, 0.5, 0.5, 0.5]のnp.arrayと仮定する
-    taste = np.array([0.5, 0.5, 0.5, 0.5])
+
+# 写真の配列化
+if picture is not None:
+    # # PIL
+    # img = Image.open(picture)
+    st.markdown(f'{picture.name} をアップロードしました.')
+    img_path = os.path.join(IMG_PATH, picture.name)
+    # 画像を保存する
+    with open(img_path, 'wb') as f:
+        f.write(picture.read())
+    
+
+    # 味を予測したい画像をRGBに
+    rgb = img_to_rgb(img_path)
+    # RGBを特徴色に
+    x = comp_sim(rgb)
+    # 特徴色を味に
+    y = conversion_rgb_into_taste(A,x)
+    # st.write(y)
     
     # taste_columnに代入
     for i in range(4):
-        taste_column[list(taste_column.keys())[i]] = taste[i]
-    
-    st.markdown('##### 👀 このお茶の味は...')
-    
+        taste_column[list(taste_column.keys())[i]] = y[i]
+        
+        
+    st.markdown('##### 👀 このお茶の味は...(およそ-1から1)')
     # 項目ごとに表示
     st.write(taste_column)
 
 # 綾鷹の例
-st.markdown('##### 参考：綾鷹の味')
-st.write({"甘味": 0.4, "渋味": 0.7, "苦味": 0.2, "香り": 0.1})
+st.markdown('##### 参考：綾鷹の味(およそ-1から1)')
+st.write({"甘味": -1.14602953, "渋味": 0.18289849, "苦味": 0.02843938, "香り": 1.05930659})
+
+
